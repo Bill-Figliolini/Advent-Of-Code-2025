@@ -24,7 +24,7 @@ pub fn day_selector(mut arguments: Vec<String>){
     };
 
     let result = match day{
-        1 => day1::day1(file_contents),
+        1 => day1::day1_2(file_contents),
         2..12=> todo!(),
         _ => unreachable!()
     };
