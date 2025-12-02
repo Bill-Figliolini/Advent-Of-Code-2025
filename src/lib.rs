@@ -1,7 +1,8 @@
 mod day1;
+mod day2;
 use std::fs;
 
-pub fn day_selector(mut arguments: Vec<String>){
+pub fn day_selector(mut arguments: Vec<String>) {
     let day = arguments[1].parse::<u32>();
     let file_read = fs::read_to_string(std::mem::take(&mut arguments[2]));
     let day = match day {
@@ -9,13 +10,13 @@ pub fn day_selector(mut arguments: Vec<String>){
             println!("Day must be between 1 and 12, inclusive.");
             return;
         }
-        Err(e) =>{
+        Err(e) => {
             println!("Date Conversion Error: {e}");
             return;
         }
-        Ok(date) => date
+        Ok(date) => date,
     };
-    let file_contents = match file_read{
+    let file_contents = match file_read {
         Ok(file_contents) => file_contents,
         Err(e) => {
             println!("File Read Error: {e}");
@@ -23,13 +24,14 @@ pub fn day_selector(mut arguments: Vec<String>){
         }
     };
 
-    let result = match day{
+    let result = match day {
         1 => day1::day1_2(file_contents),
-        2..12=> todo!(),
-        _ => unreachable!()
+        2 => day2::day2_1(file_contents),
+        3..12 => todo!(),
+        _ => unreachable!(),
     };
-    match result{
+    match result {
         Ok(result) => println!("Day {day} result is: {result}"),
-        Err(e) => println!("Day {day} errored with: {e}")
+        Err(e) => println!("Day {day} errored with: {e}"),
     }
 }
