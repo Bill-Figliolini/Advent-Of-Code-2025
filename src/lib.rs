@@ -1,6 +1,7 @@
 mod day1;
 mod day2;
 mod day3;
+mod day4;
 use std::fs;
 
 pub fn day_selector(mut arguments: Vec<String>) {
@@ -18,8 +19,8 @@ pub fn day_selector(mut arguments: Vec<String>) {
         }
         Ok(date) => date,
     };
-    let challenge = match challenge{
-        Ok(challenge) if challenge == 1 || challenge == 2  => challenge,
+    let challenge = match challenge {
+        Ok(challenge) if challenge == 1 || challenge == 2 => challenge,
         Ok(_) => {
             println!("Challenge must be 1 or 2");
             return;
@@ -37,14 +38,16 @@ pub fn day_selector(mut arguments: Vec<String>) {
         }
     };
 
-    let result = match (day, challenge){
+    let result = match (day, challenge) {
         (1, 1) => day1::day1_1(file_contents),
         (1, 2) => day1::day1_2(file_contents),
         (2, 1) => day2::day2_1(file_contents),
         (2, 2) => day2::day2_2(file_contents),
         (3, 1) => day3::day3_1(file_contents),
         (3, 2) => day3::day3_2(file_contents),
-        (4..12, _) => todo!(),
+        (4, 1) => day4::day4_1(file_contents),
+        (4, 2) => todo!(),
+        (5..12, _) => todo!(),
         _ => unreachable!(),
     };
     match result {
