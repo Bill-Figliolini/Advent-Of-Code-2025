@@ -1,23 +1,46 @@
 use anyhow::Error;
 pub fn day4_1(input: String) -> Result<i64, Error> {
-    Ok(day4(input))
+    //for ease of checking, conver input into a vec of chars
+    let rows = string_to_2d_vec(input);
+    let (result, _) = day4(rows);
+    Ok(result)
 }
 
 pub fn day4_2(input: String) -> Result<i64, Error> {
-    todo!()
+    //Interesting potential thought here
+    //wework day4 to be generate a new graph and return a tuple with it and the
+    // result to handle the repeated iterations of the part 2 challenge
+    let mut rows = string_to_2d_vec(input);
+    let mut number_moved;
+    (number_moved, rows) = day4(rows);
+
+    let mut result = 0;
+    result += number_moved;
+    while number_moved != 0 {
+        (number_moved, rows) = day4(rows);
+        result += number_moved;
+    }
+    Ok(result)
 }
 
-fn day4(input: String) -> i64 {
+fn string_to_2d_vec(input: String) -> Vec<Vec<u8>> {
+    input
+        .split_whitespace()
+        .map(|l| l.to_string().into_bytes())
+        .collect::<Vec<Vec<u8>>>()
+}
+
+fn day4(rows: Vec<Vec<u8>>) -> (i64, Vec<Vec<u8>>) {
     let mut num_of_accessable_rolls = 0;
     // First step, determine the width of a line on the number of lines for boundary checking
-    let num_columns: usize = input.chars().take_while(|c| !c.is_whitespace()).count();
-    let num_rows: usize = input.lines().count();
+    let num_columns: usize = rows[0].len();
+    let num_rows: usize = rows.len();
 
-    //for ease of checking, conver input into a vec of chars
-    let rows = input.lines().map(|l| l.as_bytes()).collect::<Vec<&[u8]>>();
+    let mut next_table: Vec<Vec<u8>> = Vec::with_capacity(num_rows);
 
     for (current_row, row) in rows.iter().enumerate() {
         let mut accessable_rolls_in_row = 0;
+        let mut new_row: Vec<u8> = Vec::with_capacity(num_columns);
         for (current_column, current) in row.iter().enumerate() {
             //determine if the roll is bound by 4 or more other rolls
             if current == &b'@' {
@@ -58,12 +81,18 @@ fn day4(input: String) -> i64 {
 
                 if num_surrounding < 4 {
                     accessable_rolls_in_row += 1;
+                    new_row.push(b'.');
+                } else {
+                    new_row.push(b'@');
                 }
+            } else {
+                new_row.push(b'.');
             }
         }
         num_of_accessable_rolls += accessable_rolls_in_row;
+        next_table.push(std::mem::take(&mut new_row));
     }
-    num_of_accessable_rolls
+    (num_of_accessable_rolls, next_table)
 }
 
 #[cfg(test)]

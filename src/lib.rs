@@ -46,7 +46,7 @@ pub fn day_selector(mut arguments: Vec<String>) {
         (3, 1) => day3::day3_1(file_contents),
         (3, 2) => day3::day3_2(file_contents),
         (4, 1) => day4::day4_1(file_contents),
-        (4, 2) => todo!(),
+        (4, 2) => day4::day4_2(file_contents),
         (5..12, _) => todo!(),
         _ => unreachable!(),
     };
