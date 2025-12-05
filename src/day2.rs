@@ -43,12 +43,7 @@ fn check_validity_1(number: i64) -> bool {
     //Formula for generating -> x = n*10^(floor(log10(n))+1) + n
     //floor(log10(n)+1) is a known quantity, it is floor(log10(x)+1)/2
     //Formula for checking -> n = x-x%10^(floor(log10(x)+1)/2)
-    let original_number_size = ((number as f64).log10().floor() as u32 + 1) / 2;
-    let potential_original_number = number % 10i64.checked_pow(original_number_size).unwrap();
-
-    let result = potential_original_number
-        + potential_original_number * 10i64.checked_pow(original_number_size).unwrap();
-    number == result
+    check_repetitions(number, 2)
 }
 
 fn check_validity_2(number: i64) -> bool {
@@ -57,7 +52,32 @@ fn check_validity_2(number: i64) -> bool {
     //The naive case for this one would be to convert to a string and use typical
     // Sliding Window style algorithms, and that would necessitate converting back to a string.
     //
+    // After a few more days of thought, I am realizing that I vastly over complicating things with
+    // going back to string comparisons. I simply use a variable original number size
+    let size_of_number = (number as f64).log10().floor() as u32 + 1;
+    for i in 2..=size_of_number {
+        if size_of_number.is_multiple_of(i) {
+            let result = check_repetitions(number, i);
+            if result {
+                return true;
+            }
+        }
+    }
     false
+}
+
+fn check_repetitions(number: i64, repetitions: u32) -> bool {
+    let original_number_size = ((number as f64).log10().floor() as u32 + 1) / repetitions;
+    let potential_original_number = number % 10i64.checked_pow(original_number_size).unwrap();
+
+    let mut result = 0;
+    //potential_original_number
+    //    + potential_original_number * 10i64.checked_pow(original_number_size).unwrap();
+    for _ in 0..repetitions {
+        result *= 10i64.checked_pow(original_number_size).unwrap();
+        result += potential_original_number;
+    }
+    number == result
 }
 
 #[cfg(test)]
@@ -72,7 +92,6 @@ mod test {
         assert_eq!(actual_output.unwrap(), intended_output);
     }
     #[test]
-    #[ignore = "unfinished"]
     fn provided_input_2() {
         let input =  "11-22,95-115,998-1012,1188511880-1188511890,222220-222224,1698522-1698528,446443-446449,38593856-38593862,565653-565659,824824821-824824827,2121212118-2121212124".to_string();
         let intended_output = 4174379265;
@@ -86,6 +105,15 @@ mod test {
         let inputs = vec![11, 22, 33, 44, 55, 66, 77, 88, 99, 1010, 1111, 1212, 6464];
         for input in inputs {
             assert!(check_validity_1(input))
+        }
+    }
+
+    #[test]
+    fn known_invalid_ids_2() {
+        let inputs = vec![11, 22, 111, 123123123];
+        for input in inputs {
+            println!("{input}");
+            assert!(check_validity_2(input));
         }
     }
 }
