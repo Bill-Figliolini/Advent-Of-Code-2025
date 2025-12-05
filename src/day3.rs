@@ -56,10 +56,16 @@ fn check_size(bank: &str, size: usize) -> i64 {
     //if it is, select it and invalidate all batteries after that point.
     'bank: for (bank_position, bank_battery) in bank.chars().enumerate() {
         for (battery_position, selected_battery) in selected_batteries.iter_mut().enumerate() {
-            if (bank.len() - bank_position) >= (size-battery_position) && bank_battery > *selected_battery  {
+            if (bank.len() - bank_position) >= (size - battery_position)
+                && bank_battery > *selected_battery
+            {
                 *selected_battery = bank_battery;
-                for i in battery_position+1 ..size {
-                    selected_batteries[i] = '0';
+                for invalid_battery in selected_batteries
+                    .iter_mut()
+                    .take(size)
+                    .skip(battery_position + 1)
+                {
+                    *invalid_battery = '0';
                 }
                 //batteries can only occur once in the output,
                 //so return to the bank after selection.
@@ -105,20 +111,15 @@ mod test {
     }
 
     #[test]
-    fn check_size_direct_input(){
-        let inputs = vec![
+    fn check_size_direct_input() {
+        let inputs = [
             "987654321111111",
             "811111111111119",
             "234234234234278",
-            "818181911112111"
+            "818181911112111",
         ];
-        let expected_outputs = vec![
-            987654321111,
-            811111111119,
-            434234234278,
-            888911112111
-        ];
-        for i in 0..4{
+        let expected_outputs = vec![987654321111, 811111111119, 434234234278, 888911112111];
+        for i in 0..4 {
             let actual_output = check_12(inputs[i]);
             assert_eq!(actual_output, expected_outputs[i]);
         }
