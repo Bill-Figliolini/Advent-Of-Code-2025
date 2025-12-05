@@ -49,7 +49,7 @@ pub fn day_selector(mut arguments: Vec<String>) {
         (4, 1) => day4::day4_1(file_contents),
         (4, 2) => day4::day4_2(file_contents),
         (5, 1) => day5::day5_1(file_contents),
-        (5, 2) => todo!(),
+        (5, 2) => day5::day5_2(file_contents),
         (6..12, _) => todo!(),
         _ => unreachable!(),
     };
