@@ -1,5 +1,3 @@
-use std::collections::BTreeSet;
-
 use anyhow::Error;
 
 pub fn day5_1(input: String) -> Result<i64, Error> {
@@ -24,58 +22,43 @@ pub fn day5_1(input: String) -> Result<i64, Error> {
         .map(|s| s.parse::<i64>().unwrap())
         .collect::<Vec<i64>>();
 
-    let mut expired_counter = 0;
+    let mut fresh_counter = 0;
     'next_id: for id in ingredient_ids {
         for (range_start, range_end) in ranges.iter() {
             if *range_start <= id && id <= *range_end {
+                fresh_counter += 1;
                 continue 'next_id;
             }
         }
-        expired_counter += 1;
     }
-    Ok(expired_counter)
+    Ok(fresh_counter)
 }
 // Going to need some time to think regarding how to construct the set of id ranges as a type.
 // Using a vec seems like an awful idea, but what about a tree perhaps?
 //
-// There are 4 different cases that need to be handled here:
-//  Left overlap -> range_start+1 <= new_range_end -> range_start = new_range_start
-//  Right overlap -> range_end+1 <= new_range_start -> range_end = new_range_end
-//  New total overlap -> range_start <= new_range_end && range_end <= new_range_start -> replace both
-//  Old total overlap -> range_start <= new_range_start && new_range_end <= range_end -> do not add
-//  new
 //  And one case if there are no Overlaps
 //  No Overlaps with any -> add new
+//  Do I even need to
 fn build_id_range(input: Vec<&str>) -> Vec<(i64, i64)> {
     let mut id_ranges: Vec<(i64, i64)> = Vec::new();
 
-    'next_range: for range in input {
+    for range in input {
         let mut nums = range.split('-');
-        let new_range_start = nums.next().unwrap().parse::<i64>().unwrap();
-        let new_range_end = nums.next().unwrap().parse::<i64>().unwrap();
-
-        for (range_start, range_end) in id_ranges.iter_mut() {
-            let mut found = false;
-            if (*range_end) <= new_range_start {
-                *range_end = new_range_end;
-                found = true;
-            }
-            if new_range_end <= (*range_start) {
-                *range_start = new_range_start;
-                found = true;
-            }
-            if *range_start <= new_range_start && new_range_end <= *range_end {
-                found = true;
-            }
-            if found {
-                continue 'next_range;
-            }
-        }
-        //not in ranges
-        id_ranges.push((new_range_start, new_range_end));
+        let range_start = nums.next().unwrap().parse::<i64>().unwrap();
+        let range_end = nums.next().unwrap().parse::<i64>().unwrap();
+        id_ranges.push((range_start, range_end));
     }
     id_ranges.sort();
-    //clean up pass for any discovered adjacent ranges
+    // this was an attempt at premature optimization.
+    //discovery of overlaps and removal of overlaps
+    let overlapped: Vec<usize> = Vec::new();
+
+    // remove overlapped ranges from right to left, as remove shifts the vec to the left and will
+    // invalidate indecies past the removal point.
+    for index in overlapped.iter().rev() {
+        id_ranges.remove(*index);
+    }
+
     id_ranges
 }
 
@@ -138,6 +121,15 @@ mod test {
         fn handles_appends_before() {
             let input = vec!["10-14", "5-9"];
             let intended_output = vec![(5, 14)];
+            let actual_output = build_id_range(input);
+
+            assert_eq!(actual_output, intended_output);
+        }
+
+        #[test]
+        fn handles_total_overlaps() {
+            let input = vec!["10-20", "12-15"];
+            let intended_output = vec![(10, 20)];
             let actual_output = build_id_range(input);
 
             assert_eq!(actual_output, intended_output);
