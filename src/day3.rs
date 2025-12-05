@@ -23,25 +23,7 @@ pub fn day3_2(input: String) -> Result<i64, Error> {
 }
 
 fn check_two(bank: &str) -> i64 {
-    // on Further thought, this isn't even a two-poointer solution.
-    // this is double linear search
-    let mut battery1 = '0';
-    let mut battery2 = '0';
-
-    for (position, battery) in bank.chars().enumerate() {
-        //need to not do this if battery is the last in the bank
-        if battery > battery1 && position != bank.len() - 1 {
-            battery1 = battery;
-            battery2 = '0';
-            continue;
-        }
-        if battery > battery2 {
-            battery2 = battery;
-        }
-    }
-    let battery1: i64 = battery1.to_digit(10).unwrap() as i64;
-    let battery2: i64 = battery2.to_digit(10).unwrap() as i64;
-    battery1 * 10 + battery2
+    check_size(bank, 2)
 }
 
 fn check_12(bank: &str) -> i64 {
@@ -118,7 +100,7 @@ mod test {
             "234234234234278",
             "818181911112111",
         ];
-        let expected_outputs = vec![987654321111, 811111111119, 434234234278, 888911112111];
+        let expected_outputs = [987654321111, 811111111119, 434234234278, 888911112111];
         for i in 0..4 {
             let actual_output = check_12(inputs[i]);
             assert_eq!(actual_output, expected_outputs[i]);
