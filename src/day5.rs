@@ -18,16 +18,19 @@ pub fn day5_1(input: String) -> Result<i64, Error> {
             }
         }
     }
-    let range = build_id_range(ranges);
+    let ranges = build_id_range(ranges);
     let ingredient_ids = ingredient_ids
         .into_iter()
         .map(|s| s.parse::<i64>().unwrap())
         .collect::<Vec<i64>>();
 
     let mut fresh_count = 0;
-    for id in ingredient_ids {
-        if range.contains(&id) {
-            fresh_count += 1;
+    'next_id: for id in ingredient_ids {
+        for (range_start, range_end) in ranges.iter() {
+            if *range_start <= id && id <= *range_end {
+                fresh_count += 1;
+                continue 'next_id;
+            }
         }
     }
     Ok(fresh_count)
@@ -56,29 +59,28 @@ pub fn day5_2(input: String) -> Result<i64, Error> {
 // Going to need some time to think regarding how to construct the set of id ranges as a type.
 // Using a vec seems like an awful idea, but what about a tree perhaps?
 //
+// There are 4 different cases that need to be handled here:
+//  Left overlap -> range_start+1 <= new_range_end -> range_start = new_range_start
+//  Right overlap -> range_end+1 <= new_range_start -> range_end = new_range_end
+//  New total overlap -> range_start <= new_range_end && range_end <= new_range_start -> replace both
+//  Old total overlap -> range_start <= new_range_start && new_range_end <= range_end -> do not add
+//  new
 //  And one case if there are no Overlaps
 //  No Overlaps with any -> add new
-//  Do I even need to
-fn build_id_range(input: Vec<&str>) -> BTreeSet<i64> {
-    let mut id_tree: BTreeSet<i64> = BTreeSet::new();
+fn build_id_range(input: Vec<&str>) -> Vec<(i64, i64)> {
+    let mut id_ranges: Vec<(i64, i64)> = Vec::new();
 
-    for range in input {
+    'next_range: for range in input {
         let mut nums = range.split('-');
-        let range_start = nums.next().unwrap().parse::<i64>().unwrap();
-        let range_end = nums.next().unwrap().parse::<i64>().unwrap();
-        for id in range_start..=range_end {
-            id_tree.insert(id);
-        }
-    }
-    // this was an attempt at premature optimization.
-    // Though coming backing and figuring out deduplication here would be nice
-    //discovery of overlaps and removal of overlaps
-    //
-    // AS it turns out, this is what I need to do for part 2.
-    // At least to avoid a naive approach of counting all the unique numbers in a hashtable
-    // Or perhaps, I could use a tree, and change the algorithm a bit.
+        let new_range_start = nums.next().unwrap().parse::<i64>().unwrap();
+        let new_range_end = nums.next().unwrap().parse::<i64>().unwrap();
 
-    id_tree
+        //not in ranges
+        id_ranges.push((new_range_start, new_range_end));
+    }
+    id_ranges.sort();
+    //clean up pass for any discovered adjacent ranges
+    id_ranges
 }
 
 #[cfg(test)]
@@ -113,5 +115,42 @@ mod test {
         let actual_result = test_func(day5_2);
 
         assert_eq!(actual_result, expected_result);
+    }
+    mod build_id_range {
+        use super::*;
+
+        #[test]
+        fn handles_overlaps_after() {
+            let input = vec!["10-14", "12-18"];
+            let intended_output = vec![(10, 18)];
+            let actual_output = build_id_range(input);
+
+            assert_eq!(actual_output, intended_output);
+        }
+        #[test]
+        fn handles_appends_after() {
+            let input = vec!["10-14", "15-18"];
+            let intended_output = vec![(10, 18)];
+            let actual_output = build_id_range(input);
+
+            assert_eq!(actual_output, intended_output);
+        }
+
+        #[test]
+        fn handles_overlaps_before() {
+            let input = vec!["10-14", "5-11"];
+            let intended_output = vec![(5, 14)];
+            let actual_output = build_id_range(input);
+
+            assert_eq!(actual_output, intended_output);
+        }
+        #[test]
+        fn handles_appends_before() {
+            let input = vec!["10-14", "5-9"];
+            let intended_output = vec![(5, 14)];
+            let actual_output = build_id_range(input);
+
+            assert_eq!(actual_output, intended_output);
+        }
     }
 }
