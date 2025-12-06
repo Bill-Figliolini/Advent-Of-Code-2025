@@ -3,22 +3,13 @@ use anyhow::Error;
 pub fn day5_1(input: String) -> Result<i64, Error> {
     //first step will be to split the input into its two constitutent parts;
     //The ranges in the starting half, and then ids to check for the second
-    let mut ranges: Vec<&str> = Vec::new();
-    let mut ingredient_ids: Vec<&str> = Vec::new();
+    let (ranges, ingredients) = input
+        .split_once("\n\n")
+        .expect("must be split by a double newline");
 
-    {
-        let mut recieving_vec = &mut ranges;
-        for line in input.lines() {
-            if line.is_empty() {
-                recieving_vec = &mut ingredient_ids;
-            } else {
-                (*recieving_vec).push(line);
-            }
-        }
-    }
     let ranges = build_id_range(ranges);
-    let ingredient_ids = ingredient_ids
-        .into_iter()
+    let ingredient_ids = ingredients
+        .lines()
         .map(|s| s.parse::<i64>().unwrap())
         .collect::<Vec<i64>>();
 
@@ -40,14 +31,9 @@ pub fn day5_2(input: String) -> Result<i64, Error> {
     // but that would waste time processing unneeded information.
     //
     // The rest of the changes will be in build_id_range, deduplicating ids.
-    let mut ranges: Vec<&str> = Vec::new();
-
-    for line in input.lines() {
-        if line.is_empty() {
-            break;
-        }
-        ranges.push(line);
-    }
+    let (ranges, _) = input
+        .split_once("\n\n")
+        .expect("must be split by a double newline");
 
     let range = build_id_range(ranges);
     Ok(range.iter().map(|(start, end)| end - start + 1).sum())
@@ -67,9 +53,9 @@ pub fn day5_2(input: String) -> Result<i64, Error> {
 //
 //  Or we can simplify by reframing, ignoring the left overlaps entirely by sorting in advance and
 //  growing from the left.
-fn build_id_range(input: Vec<&str>) -> Vec<(i64, i64)> {
+fn build_id_range(input: &str) -> Vec<(i64, i64)> {
     let mut id_ranges: Vec<(i64, i64)> = input
-        .iter()
+        .lines()
         .map(|line| line.split_once('-').expect("incorrect Format"))
         .map(|pair| {
             (
@@ -134,7 +120,7 @@ mod test {
 
         #[test]
         fn handles_overlaps_after() {
-            let input = vec!["10-14", "12-18"];
+            let input = "10-14\n12-18";
             let intended_output = vec![(10, 18)];
             let actual_output = build_id_range(input);
 
@@ -142,7 +128,7 @@ mod test {
         }
         #[test]
         fn handles_appends_after() {
-            let input = vec!["10-14", "15-18"];
+            let input = "10-14\n15-18";
             let intended_output = vec![(10, 18)];
             let actual_output = build_id_range(input);
 
@@ -151,7 +137,7 @@ mod test {
 
         #[test]
         fn handles_overlaps_before() {
-            let input = vec!["10-14", "5-11"];
+            let input = "10-14\n5-11";
             let intended_output = vec![(5, 14)];
             let actual_output = build_id_range(input);
 
@@ -159,7 +145,7 @@ mod test {
         }
         #[test]
         fn handles_appends_before() {
-            let input = vec!["10-14", "5-9"];
+            let input = "10-14\n5-9";
             let intended_output = vec![(5, 14)];
             let actual_output = build_id_range(input);
 
