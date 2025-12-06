@@ -8,7 +8,41 @@ pub fn selector(input: String, challenge: u32) -> Result<i64, Error> {
 }
 
 fn day6_1(input: String) -> Result<i64, Error> {
-    Ok(0)
+    let mut operators: Vec<fn(i64, i64) -> i64> = Vec::new();
+
+    //This can be vastly simplifieed by working from the bottom up.
+    // create a vec of operators from the last line, then simple use the values vec
+    // as an accumulator for each line.
+    let mut line_iter = input.lines().rev();
+    let operator_iter = line_iter
+        .next()
+        .expect("input not empty")
+        .split_whitespace();
+
+    let mut accumulator: Vec<i64> = Vec::new();
+    for operator in operator_iter {
+        match operator {
+            "+" => {
+                operators.push(|x: i64, y: i64| x + y);
+                accumulator.push(0);
+            }
+            "*" => {
+                operators.push(|x: i64, y: i64| x * y);
+                accumulator.push(1);
+            }
+            _ => panic!("not operator in operator line"),
+        }
+    }
+
+    let results = line_iter.fold(accumulator, |mut accum: Vec<i64>, line| {
+        for (index, num) in line.split_whitespace().enumerate() {
+            let num = num.parse::<i64>().expect("input is number");
+            accum[index] = operators[index](accum[index], num);
+        }
+        accum
+    });
+
+    Ok(results.iter().sum())
 }
 
 #[cfg(test)]
