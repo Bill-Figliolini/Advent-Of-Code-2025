@@ -1,5 +1,3 @@
-use std::collections::BTreeSet;
-
 use anyhow::Error;
 
 pub fn day5_1(input: String) -> Result<i64, Error> {
@@ -52,8 +50,7 @@ pub fn day5_2(input: String) -> Result<i64, Error> {
     }
 
     let range = build_id_range(ranges);
-
-    Ok(range.len() as i64)
+    Ok(range.iter().map(|(start, end)| end - start + 1).sum())
 }
 
 // Going to need some time to think regarding how to construct the set of id ranges as a type.
@@ -67,20 +64,36 @@ pub fn day5_2(input: String) -> Result<i64, Error> {
 //  new
 //  And one case if there are no Overlaps
 //  No Overlaps with any -> add new
+//
+//  Or we can simplify by reframing, ignoring the left overlaps entirely by sorting in advance and
+//  growing from the left.
 fn build_id_range(input: Vec<&str>) -> Vec<(i64, i64)> {
-    let mut id_ranges: Vec<(i64, i64)> = Vec::new();
-
-    'next_range: for range in input {
-        let mut nums = range.split('-');
-        let new_range_start = nums.next().unwrap().parse::<i64>().unwrap();
-        let new_range_end = nums.next().unwrap().parse::<i64>().unwrap();
-
-        //not in ranges
-        id_ranges.push((new_range_start, new_range_end));
-    }
+    let mut id_ranges: Vec<(i64, i64)> = input
+        .iter()
+        .map(|line| line.split_once('-').expect("incorrect Format"))
+        .map(|pair| {
+            (
+                pair.0.parse::<i64>().expect("Not a Num"),
+                pair.1.parse::<i64>().expect("Not a Num"),
+            )
+        })
+        .collect();
     id_ranges.sort();
     //clean up pass for any discovered adjacent ranges
     id_ranges
+        .iter()
+        .fold(Vec::new(), |mut accum: Vec<(i64, i64)>, &curr_range| {
+            if let Some(prev_range) = accum.last_mut() {
+                if curr_range.0 <= prev_range.1 {
+                    prev_range.1 = std::cmp::max(prev_range.1, curr_range.1);
+                } else {
+                    accum.push(curr_range)
+                }
+                return accum;
+            }
+            accum.push(curr_range);
+            accum
+        })
 }
 
 #[cfg(test)]
