@@ -1,6 +1,12 @@
 use anyhow::Error;
-
-pub fn day5_1(input: String) -> Result<i64, Error> {
+pub fn selector(input: String, challenge: u32) -> Result<i64, Error> {
+    match challenge {
+        1 => day5_1(input),
+        2 => day5_2(input),
+        _ => unreachable!(),
+    }
+}
+fn day5_1(input: String) -> Result<i64, Error> {
     //first step will be to split the input into its two constitutent parts;
     //The ranges in the starting half, and then ids to check for the second
     let (ranges, ingredients) = input
@@ -25,7 +31,7 @@ pub fn day5_1(input: String) -> Result<i64, Error> {
     Ok(fresh_count)
 }
 
-pub fn day5_2(input: String) -> Result<i64, Error> {
+fn day5_2(input: String) -> Result<i64, Error> {
     // Only changes here from part 1 are the removal of ingredient id handling.
     // Which could be donw in a less duplicated way by passing out two values from a function,
     // but that would waste time processing unneeded information.

@@ -1,12 +1,20 @@
 use anyhow::Error;
-pub fn day4_1(input: String) -> Result<i64, Error> {
+
+pub fn selector(input: String, challenge: u32) -> Result<i64, Error> {
+    match challenge {
+        1 => day4_1(input),
+        2 => day4_2(input),
+        _ => unreachable!(),
+    }
+}
+fn day4_1(input: String) -> Result<i64, Error> {
     //for ease of checking, conver input into a vec of chars
     let rows = string_to_2d_vec(input);
     let (result, _) = day4(rows);
     Ok(result)
 }
 
-pub fn day4_2(input: String) -> Result<i64, Error> {
+fn day4_2(input: String) -> Result<i64, Error> {
     //Interesting potential thought here
     //wework day4 to be generate a new graph and return a tuple with it and the
     // result to handle the repeated iterations of the part 2 challenge

@@ -1,4 +1,13 @@
 use anyhow::Error;
+
+pub fn selector(input: String, challenge: u32) -> Result<i64, Error> {
+    match challenge {
+        1 => day2_1(input),
+        2 => day2_2(input),
+        _ => unreachable!(),
+    }
+}
+
 fn day2(input: String, validation_func: fn(i64) -> bool) -> Result<i64, Error> {
     //Misread the initial description at first.
     //Did nto consdier that the units were the parenthesis separated Ranges,
@@ -26,10 +35,10 @@ fn day2(input: String, validation_func: fn(i64) -> bool) -> Result<i64, Error> {
 
     Ok(sum_of_invalid_ids)
 }
-pub fn day2_1(input: String) -> Result<i64, Error> {
+fn day2_1(input: String) -> Result<i64, Error> {
     day2(input, check_validity_1)
 }
-pub fn day2_2(input: String) -> Result<i64, Error> {
+fn day2_2(input: String) -> Result<i64, Error> {
     day2(input, check_validity_2)
 }
 

@@ -39,18 +39,13 @@ pub fn day_selector(mut arguments: Vec<String>) {
         }
     };
 
-    let result = match (day, challenge) {
-        (1, 1) => day1::day1_1(file_contents),
-        (1, 2) => day1::day1_2(file_contents),
-        (2, 1) => day2::day2_1(file_contents),
-        (2, 2) => day2::day2_2(file_contents),
-        (3, 1) => day3::day3_1(file_contents),
-        (3, 2) => day3::day3_2(file_contents),
-        (4, 1) => day4::day4_1(file_contents),
-        (4, 2) => day4::day4_2(file_contents),
-        (5, 1) => day5::day5_1(file_contents),
-        (5, 2) => day5::day5_2(file_contents),
-        (6..12, _) => todo!(),
+    let result = match day {
+        1 => day1::selector(file_contents, challenge),
+        2 => day2::selector(file_contents, challenge),
+        3 => day3::selector(file_contents, challenge),
+        4 => day4::selector(file_contents, challenge),
+        5 => day5::selector(file_contents, challenge),
+        6..12 => todo!(),
         _ => unreachable!(),
     };
     match result {

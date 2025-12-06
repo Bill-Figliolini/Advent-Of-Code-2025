@@ -1,5 +1,11 @@
 use anyhow::Error;
-
+pub fn selector(input: String, challenge: u32) -> Result<i64, Error> {
+    match challenge {
+        1 => day3_1(input),
+        2 => day3_2(input),
+        _ => unreachable!(),
+    }
+}
 fn day3(input: String, check_func: fn(&str) -> i64) -> Result<i64, Error> {
     //Today's problem doesn't seem too bad.
     // Simple example of a two-pointer solution, where
@@ -14,11 +20,11 @@ fn day3(input: String, check_func: fn(&str) -> i64) -> Result<i64, Error> {
     Ok(sum_of_max_joltages)
 }
 
-pub fn day3_1(input: String) -> Result<i64, Error> {
+fn day3_1(input: String) -> Result<i64, Error> {
     day3(input, check_two)
 }
 
-pub fn day3_2(input: String) -> Result<i64, Error> {
+fn day3_2(input: String) -> Result<i64, Error> {
     day3(input, check_12)
 }
 
