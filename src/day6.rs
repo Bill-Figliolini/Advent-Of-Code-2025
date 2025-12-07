@@ -7,20 +7,16 @@ pub fn selector(input: String, challenge: u32) -> Result<i64, Error> {
     }
 }
 
-fn day6_1(input: String) -> Result<i64, Error> {
-    let mut operators: Vec<fn(i64, i64) -> i64> = Vec::new();
-
-    //This can be vastly simplifieed by working from the bottom up.
+fn day6(input: String, parse_func: fn(Vec<&str>) -> Vec<Vec<i64>>) -> Result<i64, Error> {
+    //This can be vastly simplified by working from the bottom up.
     // create a vec of operators from the last line, then simple use the values vec
     // as an accumulator for each line.
-    let mut line_iter = input.lines().rev();
-    let operator_iter = line_iter
-        .next()
-        .expect("input not empty")
-        .split_whitespace();
+    let mut lines: Vec<&str> = input.lines().collect();
+    let operator_line = lines.pop().expect("Input Not Empty");
 
+    let mut operators: Vec<fn(i64, i64) -> i64> = Vec::new();
     let mut accumulator: Vec<i64> = Vec::new();
-    for operator in operator_iter {
+    for operator in operator_line.split_whitespace() {
         match operator {
             "+" => {
                 operators.push(|x: i64, y: i64| x + y);
@@ -34,15 +30,35 @@ fn day6_1(input: String) -> Result<i64, Error> {
         }
     }
 
-    let results = line_iter.fold(accumulator, |mut accum: Vec<i64>, line| {
-        for (index, num) in line.split_whitespace().enumerate() {
-            let num = num.parse::<i64>().expect("input is number");
-            accum[index] = operators[index](accum[index], num);
-        }
-        accum
-    });
+    let values: Vec<Vec<i64>> = parse_func(lines);
+
+    let results = values
+        .iter()
+        .fold(accumulator, |mut accum: Vec<i64>, row_of_nums| {
+            for (index, num) in row_of_nums.iter().enumerate() {
+                accum[index] = operators[index](accum[index], *num);
+            }
+            accum
+        });
 
     Ok(results.iter().sum())
+}
+
+fn part1_parse(input: Vec<&str>) -> Vec<Vec<i64>> {
+    //line.split_whitespace()
+    // .parse::<i64>().expect("input is number")
+    input
+        .iter()
+        .map(|line| {
+            line.split_whitespace()
+                .map(|num| num.parse::<i64>().expect("input is all nums"))
+                .collect::<Vec<i64>>()
+        })
+        .collect::<Vec<Vec<i64>>>()
+}
+
+fn day6_1(input: String) -> Result<i64, Error> {
+    day6(input, part1_parse)
 }
 
 #[cfg(test)]
