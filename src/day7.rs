@@ -27,28 +27,16 @@ fn day(input: String) -> Result<i64, Error> {
         //expected.
         // Need a separate pair of maps in order to satisfy the borrow checker, and it does avoid a
         // potential complication inside the initial loop.
+        // pair of maps was unneeded, only a single contact map.
         for beam in beams.iter() {
             if line[*beam] == b'^' {
+                count += 1;
                 beam_contact.insert(*beam);
             }
         }
         for beam in beam_contact.iter() {
-            let left_overlap = if *beam > 1 {
-                let duplication = *beam > 2 && beam_contact.contains(&(*beam - 2));
-                beams.insert(*beam - 1) || duplication
-            } else {
-                false
-            };
-            let right_overlap = if *beam < area_size {
-                let duplication = *beam < area_size - 1 && beam_contact.contains(&(*beam + 2));
-                beams.insert(*beam + 1) || duplication
-            } else {
-                false
-            };
-            //overlloked the shortcircuit eval of bools and did not consider a side effect
-            if left_overlap || right_overlap {
-                count += 1;
-            }
+            beams.insert(*beam - 1);
+            beams.insert(*beam + 1);
 
             beams.remove(beam);
         }
