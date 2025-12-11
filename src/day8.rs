@@ -5,12 +5,11 @@ use std::{
 
 use anyhow::{Error, bail};
 pub fn selector(input: String, challenge: u32) -> Result<i64, Error> {
-    let (depth, top_n) = match challenge {
-        1 => (1000, 3),
-        2 => todo!(),
+    match challenge {
+        1 => part1(input, 1000, 3),
+        2 => part2(input),
         _ => unreachable!(),
-    };
-    day(input, depth, top_n)
+    }
 }
 #[derive(Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 struct Point {
@@ -31,6 +30,7 @@ impl Point {
         (x_dist + y_dist + z_dist).sqrt()
     }
 }
+
 #[derive(Debug)]
 struct DistancePair<'a> {
     distance: f64,
@@ -60,10 +60,104 @@ impl<'a> PartialOrd for DistancePair<'a> {
         Some(self.cmp(other))
     }
 }
+//Could make some significant improvements to this one. runs in 30ms per run, which likely means
+//that my deviation from the standard Kruzkal algorithm implementation
 
-fn day(input: String, depth: u32, top_n: usize) -> Result<i64, Error> {
-    let points: Vec<Point> = parse(input)?;
-    let mut distances: BinaryHeap<DistancePair> = BinaryHeap::new();
+fn part1(input: String, depth: u32, top_n: usize) -> Result<i64, Error> {
+    let points = parse(input)?;
+    let mut distances: BinaryHeap<DistancePair> = get_distances(&points);
+    let mut circuits = make_circuits(&points);
+    //Assemble the circuits. but how do I do it? Do I simply create a vec of sets of points, and
+    //append and merge as needed?
+    for _ in 0..depth {
+        circuits = match distances.pop() {
+            Some(d) => update_circuits(circuits, d),
+            None => bail!("insufficent points for given depth!"),
+        }
+    }
+    circuits.sort_by_key(|c| Reverse(c.len()));
+    let result: usize = circuits
+        .into_iter()
+        .take(top_n)
+        .map(|c| c.len())
+        .reduce(|acc, len| acc * len)
+        .expect("Can not be empty");
+
+    Ok(result as i64)
+}
+
+fn part2(input: String) -> Result<i64, Error> {
+    let points = parse(input)?;
+    let mut distances = get_distances(&points);
+    let mut circuits = make_circuits(&points);
+    let mut prev_two_junctions_x: [i64; 2] = [0; 2];
+
+    while let Some(d) = distances.pop() {
+        prev_two_junctions_x[0] = d.p1.x;
+        prev_two_junctions_x[1] = d.p2.x;
+        circuits = update_circuits(circuits, d);
+        if circuits.len() == 1 {
+            break;
+        }
+    }
+    println!("{:?}", prev_two_junctions_x);
+    let result = prev_two_junctions_x[0] * prev_two_junctions_x[1];
+    Ok(result)
+}
+
+fn make_circuits<'a>(points: &'a [Point]) -> Vec<HashSet<&'a Point>> {
+    let mut circuits = Vec::new();
+    for point in points {
+        let mut circuit = HashSet::new();
+        circuit.insert(point);
+        circuits.push(circuit);
+    }
+    circuits
+}
+
+fn update_circuits<'a>(
+    mut circuits: Vec<HashSet<&'a Point>>,
+    d: DistancePair<'a>,
+) -> Vec<HashSet<&'a Point>> {
+    // There's a better way to do this that I should have recognized: Union Find
+    let mut circuit_connected: (Option<HashSet<&Point>>, Option<HashSet<&Point>>) = (None, None);
+    for circuit in circuits.iter_mut() {
+        if circuit.contains(d.p1) {
+            circuit_connected.0 = Some(std::mem::take(circuit));
+        }
+        if circuit.contains(d.p2) {
+            circuit_connected.1 = Some(std::mem::take(circuit));
+        }
+    }
+    circuits.retain(|v| !v.is_empty());
+    let circuit_to_add = match circuit_connected {
+        (Some(mut circuit1), Some(circuit2)) => {
+            circuit1.extend(circuit2);
+            circuit1
+        }
+        //circuit connects to itself.
+        (Some(circuit), None) => circuit,
+        _ => unreachable!(),
+    };
+    circuits.push(circuit_to_add);
+    circuits
+}
+
+fn parse(input: String) -> Result<Vec<Point>, Error> {
+    //This can be vastly simplified, and create s
+    let mut points: Vec<Point> = Vec::new();
+    for line in input.lines() {
+        let coords: Vec<i64> = line
+            .splitn(3, ',')
+            .map(|n| n.parse::<i64>().expect("valid integer"))
+            .collect();
+        points.push(Point::new(coords[0], coords[1], coords[2]));
+    }
+    Ok(points)
+}
+
+fn get_distances<'a>(points: &[Point]) -> BinaryHeap<DistancePair> {
+    let mut distances = BinaryHeap::new();
     //Go through all the points, calculating the distances between them. Push to a Min heap to
     //acquire a sorted selection of distance pairs
     for (index, p1) in points.iter().enumerate() {
@@ -74,77 +168,12 @@ fn day(input: String, depth: u32, top_n: usize) -> Result<i64, Error> {
             distances.push(distance_pair);
         }
     }
-    //Assemble the circuits. but how do I do it? Do I simply create a vec of sets of points, and
-    //append and merge as needed?
-    let mut circuits: Vec<HashSet<&Point>> = Vec::new();
-    for _ in 0..depth {
-        match distances.pop() {
-            Some(d) => {
-                let mut circuit_connected: (Option<HashSet<&Point>>, Option<HashSet<&Point>>) =
-                    (None, None);
-                for circuit in circuits.iter_mut() {
-                    if circuit.contains(d.p1) {
-                        circuit_connected.0 = Some(std::mem::take(circuit));
-                    }
-                    if circuit.contains(d.p2) {
-                        circuit_connected.1 = Some(std::mem::take(circuit));
-                    }
-                }
-                circuits.retain(|v| !v.is_empty());
-                let circuit_to_add = match circuit_connected {
-                    (None, None) => {
-                        let mut new_circuit = HashSet::new();
-                        new_circuit.insert(d.p1);
-                        new_circuit.insert(d.p2);
-                        new_circuit
-                    }
-                    (Some(mut circuit), None) => {
-                        circuit.insert(d.p2);
-                        circuit
-                    }
-                    (None, Some(mut circuit)) => {
-                        circuit.insert(d.p1);
-                        circuit
-                    }
-                    (Some(mut circuit1), Some(circuit2)) => {
-                        circuit1.extend(circuit2);
-                        circuit1
-                    }
-                };
-                circuits.push(circuit_to_add);
-            }
-            None => bail!("insufficent points for given depth!"),
-        }
-    }
-    circuits.sort_by_key(|c| Reverse(c.len()));
-    let result: usize = circuits
-        .into_iter()
-        .take(top_n)
-        .map(|c| c.len())
-        .collect::<Vec<usize>>()
-        .into_iter()
-        .reduce(|acc, len| acc * len)
-        .expect("Can not be empty");
-
-    Ok(result as i64)
-}
-
-fn parse(input: String) -> Result<Vec<Point>, Error> {
-    let mut points: Vec<Point> = Vec::new();
-    let mut coords = Vec::with_capacity(3);
-    for line in input.lines() {
-        coords = line
-            .splitn(3, ',')
-            .map(|n| n.parse::<i64>().expect("valid integer"))
-            .collect();
-        points.push(Point::new(coords[0], coords[1], coords[2]));
-    }
-    Ok(points)
+    distances
 }
 #[cfg(test)]
 mod test {
     use super::*;
-    fn test_func(_challenge: u32) -> i64 {
+    fn test_func(challenge: u32) -> i64 {
         let input = "162,817,812
 57,618,57
 906,360,560
@@ -166,13 +195,24 @@ mod test {
 984,92,344
 425,690,689"
             .to_string();
-        day(input, 10, 3).unwrap()
+        match challenge {
+            1 => part1(input, 10, 3).unwrap(),
+            2 => part2(input).unwrap(),
+            _ => unreachable!(),
+        }
     }
 
     #[test]
     fn advent_provided_input1() {
         let expected_result = 40;
         let actual_result = test_func(1);
+
+        assert_eq!(actual_result, expected_result);
+    }
+    #[test]
+    fn advent_provided_input2() {
+        let expected_result = 25272;
+        let actual_result = test_func(2);
 
         assert_eq!(actual_result, expected_result);
     }
