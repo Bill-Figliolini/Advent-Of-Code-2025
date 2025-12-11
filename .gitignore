@@ -26,3 +26,6 @@ target
 
 # To keep inputs confidential
 inputs
+flamegraph.svg
+perf.data
+perf.data.old
