@@ -100,7 +100,6 @@ fn part2(input: String) -> Result<i64, Error> {
             break;
         }
     }
-    println!("{:?}", prev_two_junctions_x);
     let result = prev_two_junctions_x[0] * prev_two_junctions_x[1];
     Ok(result)
 }
