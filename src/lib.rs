@@ -6,6 +6,7 @@ mod day5;
 mod day6;
 mod day7;
 mod day8;
+mod day9;
 use std::fs;
 
 pub fn day_selector(mut arguments: Vec<String>) {
@@ -51,7 +52,8 @@ pub fn day_selector(mut arguments: Vec<String>) {
         6 => day6::selector(file_contents, challenge),
         7 => day7::selector(file_contents, challenge),
         8 => day8::selector(file_contents, challenge),
-        9..12 => todo!(),
+        9 => day9::selector(file_contents, challenge),
+        10..12 => todo!(),
         _ => unreachable!(),
     };
     match result {
