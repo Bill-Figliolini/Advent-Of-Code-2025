@@ -104,7 +104,7 @@ fn part2(input: String) -> Result<i64, Error> {
     Ok(result)
 }
 
-fn make_circuits<'a>(points: &'a [Point]) -> Vec<HashSet<&'a Point>> {
+fn make_circuits(points: &[Point]) -> Vec<HashSet<&Point>> {
     let mut circuits = Vec::new();
     for point in points {
         let mut circuit = HashSet::new();
@@ -155,7 +155,7 @@ fn parse(input: String) -> Result<Vec<Point>, Error> {
     Ok(points)
 }
 
-fn get_distances<'a>(points: &[Point]) -> BinaryHeap<DistancePair> {
+fn get_distances<'a>(points: &'a [Point]) -> BinaryHeap<DistancePair<'a>> {
     let mut distances = BinaryHeap::new();
     //Go through all the points, calculating the distances between them. Push to a Min heap to
     //acquire a sorted selection of distance pairs
